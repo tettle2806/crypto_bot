@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta, UTC
 
+
 def sma_strategy(prices, short_window=10, long_window=50):
     df = pd.DataFrame(prices, columns=["price"])
     df["SMA_short"] = df["price"].rolling(short_window).mean()
@@ -14,7 +15,6 @@ def sma_strategy(prices, short_window=10, long_window=50):
         return "SELL"
     else:
         return "HOLD"
-
 
 
 def get_historical_prices(symbol="BTCUSDT", interval="1h", days=150):
@@ -30,7 +30,7 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=150):
         "interval": interval,
         "startTime": start_time,
         "endTime": end_time,
-        "limit": 1000
+        "limit": 1000,
     }
 
     response = requests.get(url, params=params)
@@ -39,6 +39,7 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=150):
     # Извлекаем цены закрытия
     prices = [float(candle[4]) for candle in data]  # Индекс 4 — цена закрытия
     return prices
+
 
 def analyze_market(symbol="BTCUSDT"):
     """
