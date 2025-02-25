@@ -2,7 +2,7 @@ import ccxt
 import pandas as pd
 import pandas_ta as ta
 
-def fetch_binance_data(symbol="BTC/USDT", timeframe="1h", limit=100):
+def fetch_binance_data(symbol="BTC/USDT", timeframe="1m", limit=1000):
     """
     Получает исторические данные с Binance.
 
@@ -21,7 +21,7 @@ def fetch_binance_data(symbol="BTC/USDT", timeframe="1h", limit=100):
 
 
 
-def calculate_bollinger_bands(data, period=20, std_dev=2):
+def calculate_bollinger_bands(data, period=50, std_dev=2):
     """
     Рассчитывает полосы Боллинджера.
 
@@ -43,25 +43,29 @@ def calculate_bollinger_bands(data, period=20, std_dev=2):
     return data
 
 
+
 def generate_signals(data):
     """
-    Генерирует торговые сигналы на основе пробоя Bollinger Bands.
-
-    :param data: DataFrame с колонками ['close', 'Upper', 'Lower']
-    :return: DataFrame с колонкой 'Signal' (buy/sell/hold)
+    Генерирует торговые сигналы на основе Bollinger Bands с фильтром тренда EMA(50).
     """
     data = data.copy()
-    data['Signal'] = "HOLD"  # По умолчанию держим позицию
+    data['EMA_50'] = ta.ema(data['close'], length=50)  # Фильтр тренда
+    adx = ta.adx(data['high'], data['low'], data['close'], length=14)
+    data['ADX'] = adx['ADX_14']  # Берём только сам ADX
 
-    # Покупка, если цена пробивает верхнюю границу
-    data.loc[data['close'] > data['Upper'], 'Signal'] = "BUY"
+    data.loc[data['ADX'] < 20, 'Signal'] = "HOLD"
 
-    # Продажа, если цена пробивает нижнюю границу
-    data.loc[data['close'] < data['Lower'], 'Signal'] = "SELL"
+
+    # Покупка: если цена пробила верхнюю границу и выше EMA
+    data.loc[(data['close'] > data['Upper']) & (data['close'].shift(1) <= data['Upper']) & (data['close'] > data['EMA_50']), 'Signal'] = "BUY"
+
+    # Продажа: если цена пробила нижнюю границу и ниже EMA
+    data.loc[(data['close'] < data['Lower']) & (data['close'].shift(1) >= data['Lower']) & (data['close'] < data['EMA_50']), 'Signal'] = "SELL"
+
 
     return data
 
 
 # Тестируем
-data = generate_signals(calculate_bollinger_bands(fetch_binance_data(limit=1000)))
-print(data[['timestamp', 'close', 'Upper', 'Lower', 'Signal']].tail(10))
+data = generate_signals(calculate_bollinger_bands(fetch_binance_data(limit=2000)))
+
