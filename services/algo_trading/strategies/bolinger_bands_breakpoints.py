@@ -2,6 +2,10 @@ import ccxt
 import pandas as pd
 import pandas_ta as ta
 
+#TODO: Скрипт для торговли по стратегии "Bollinger Bands Breakpoints".
+#TODO: Не рабочая стратегия
+#TODO: Реализовать стратегию
+
 def fetch_binance_data(symbol="BTC/USDT", timeframe="1m", limit=1000):
     """
     Получает исторические данные с Binance.

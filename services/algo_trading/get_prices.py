@@ -27,6 +27,7 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, de
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
+            print(data)
             return pd.Series([float(candle[4]) for candle in data])  # Цена закрытия
         except requests.exceptions.RequestException as e:
             print(f"Ошибка запроса ({attempt + 1}/{retries}): {e}")
