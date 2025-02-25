@@ -1,16 +1,18 @@
 import pandas as pd
 import requests
 from datetime import datetime, timedelta, UTC
+import time
 
 
-def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7):
+def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, delay=5):
     """
     Получает исторические цены с Binance за последние `days` дней.
+    Повторяет запрос `retries` раз в случае ошибки.
     """
     end_time = int(datetime.now(UTC).timestamp() * 1000)
     start_time = int((datetime.now(UTC) - timedelta(days=days)).timestamp() * 1000)
+    url = "https://api.binance.com/api/v3/klines"
 
-    url = f"https://api.binance.com/api/v3/klines"
     params = {
         "symbol": symbol,
         "interval": interval,
@@ -19,12 +21,17 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7):
         "limit": 1000,
     }
 
-    response = requests.get(url, params=params)
-    data = response.json()
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()  # Вызывает ошибку, если статус != 200
+            data = response.json()
+            return pd.Series([float(candle[4]) for candle in data])  # Цена закрытия
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка запроса ({attempt + 1}/{retries}): {e}")
+            time.sleep(delay)  # Подождать перед повторной попыткой
 
-    # Извлекаем цены закрытия
-    prices = [float(candle[4]) for candle in data]  # Индекс 4 — цена закрытия
-    return pd.Series(prices)
+    raise ConnectionError("Не удалось получить данные с Binance после нескольких попыток.")
 
 
 def rsi_strategy(symbol="BTCUSDT", interval="1h", period=14, overbought=70, oversold=30):
@@ -50,5 +57,4 @@ def rsi_strategy(symbol="BTCUSDT", interval="1h", period=14, overbought=70, over
         return "HOLD"
 
 
-# Пример использования
 
