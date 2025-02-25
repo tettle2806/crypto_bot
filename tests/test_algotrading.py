@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from services.algo_trading.strategies.bollinger_bands import bollinger_bands_strategy, get_historical_prices
+from services.algo_trading.strategies.bollinger_bands import bollinger_bands_strategy
 from services.algo_trading.strategies.macd import analyze_macd_rsi, macd_strategy, rsi_strategy
 from services.algo_trading.strategies.sma import sma_strategy
 

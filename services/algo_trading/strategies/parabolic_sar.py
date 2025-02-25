@@ -66,18 +66,6 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, de
     raise ConnectionError("Не удалось получить данные с Binance после нескольких попыток.")
 
 
-def macd_strategy(prices, short_period=12, long_period=26, signal_period=9):
-    """
-    Реализация стратегии MACD.
-    """
-    df = pd.DataFrame(prices, columns=["price"])
-    df["EMA_short"] = df["price"].ewm(span=short_period, adjust=False).mean()
-    df["EMA_long"] = df["price"].ewm(span=long_period, adjust=False).mean()
-    df["MACD"] = df["EMA_short"] - df["EMA_long"]
-    df["Signal"] = df["MACD"].ewm(span=signal_period, adjust=False).mean()
-
-    return df
-
 
 def rsi_strategy(prices, period=14, overbought=70, oversold=30):
     """

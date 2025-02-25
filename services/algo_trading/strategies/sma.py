@@ -1,6 +1,5 @@
 import pandas as pd
-import requests
-from datetime import datetime, timedelta, UTC
+from services.algo_trading.get_prices import get_historical_prices
 
 # Таймфреймы для комбинированного анализа
 TIMEFRAMES = {
@@ -9,28 +8,6 @@ TIMEFRAMES = {
     "long": {"interval": "1d", "short_window": 50, "long_window": 200},
 }
 
-def get_historical_prices(symbol="BTCUSDT", interval="1h", days=150):
-    """
-    Получает исторические цены с Binance за последние `days` дней.
-    """
-    end_time = int(datetime.now(UTC).timestamp() * 1000)
-    start_time = int((datetime.now(UTC) - timedelta(days=days)).timestamp() * 1000)
-
-    url = f"https://api.binance.com/api/v3/klines"
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "startTime": start_time,
-        "endTime": end_time,
-        "limit": 1000,
-    }
-
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    # Извлекаем цены закрытия
-    prices = [float(candle[4]) for candle in data]  # Индекс 4 — цена закрытия
-    return prices
 
 def sma_strategy(prices, short_window=10, long_window=50):
     """
