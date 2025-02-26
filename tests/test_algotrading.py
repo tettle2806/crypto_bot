@@ -3,13 +3,19 @@ import unittest
 import pandas as pd
 
 from services.algo_trading.strategies.bollinger_bands import bollinger_bands_strategy
-from services.algo_trading.strategies.macd import analyze_macd_rsi, macd_strategy, rsi_strategy
+from services.algo_trading.strategies.macd import (
+    analyze_macd_rsi,
+    macd_strategy,
+    rsi_strategy,
+)
 from services.algo_trading.strategies.sma import sma_strategy
 
 
 class TestTradingStrategies(unittest.TestCase):
     def setUp(self):
-        self.prices = pd.Series([i + (i % 5 - 2) for i in range(100)])  # Искусственные данные
+        self.prices = pd.Series(
+            [i + (i % 5 - 2) for i in range(100)]
+        )  # Искусственные данные
 
     def test_macd_strategy(self):
         df_macd = macd_strategy(self.prices)

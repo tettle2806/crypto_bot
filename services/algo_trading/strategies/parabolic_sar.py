@@ -5,7 +5,9 @@ import time
 import ta
 
 
-def get_historical_high_low_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, delay=5):
+def get_historical_high_low_prices(
+    symbol="BTCUSDT", interval="1h", days=7, retries=3, delay=5
+):
     """
     Получает исторические максимальные и минимальные цены свечей.
     """
@@ -33,7 +35,9 @@ def get_historical_high_low_prices(symbol="BTCUSDT", interval="1h", days=7, retr
             print(f"Ошибка запроса ({attempt + 1}/{retries}): {e}")
             time.sleep(delay)
 
-    raise ConnectionError("Не удалось получить данные с Binance после нескольких попыток.")
+    raise ConnectionError(
+        "Не удалось получить данные с Binance после нескольких попыток."
+    )
 
 
 def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, delay=5):
@@ -63,8 +67,9 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, de
             print(f"Ошибка запроса ({attempt + 1}/{retries}): {e}")
             time.sleep(delay)
 
-    raise ConnectionError("Не удалось получить данные с Binance после нескольких попыток.")
-
+    raise ConnectionError(
+        "Не удалось получить данные с Binance после нескольких попыток."
+    )
 
 
 def rsi_strategy(prices, period=14, overbought=70, oversold=30):
@@ -112,7 +117,9 @@ def bollinger_bands_strategy(prices, window=20, num_std=2):
         return "HOLD"
 
 
-def parabolic_sar_strategy(symbol="BTCUSDT", interval="1h", days=7, step=0.02, max_step=0.2):
+def parabolic_sar_strategy(
+    symbol="BTCUSDT", interval="1h", days=7, step=0.02, max_step=0.2
+):
     """
     Реализация стратегии Parabolic SAR с дополнительными фильтрами ADX, EMA, MACD и RSI.
     """
@@ -120,7 +127,9 @@ def parabolic_sar_strategy(symbol="BTCUSDT", interval="1h", days=7, step=0.02, m
     high, low = get_historical_high_low_prices(symbol, interval, days)
 
     df = pd.DataFrame({"high": high, "low": low, "close": prices})
-    df["SAR"] = ta.trend.PSARIndicator(df["high"], df["low"], step=step, max_step=max_step, close=df["close"]).psar()
+    df["SAR"] = ta.trend.PSARIndicator(
+        df["high"], df["low"], step=step, max_step=max_step, close=df["close"]
+    ).psar()
     df["ADX"] = ta.trend.ADXIndicator(df["high"], df["low"], df["close"]).adx()
     df["EMA_short"] = df["close"].ewm(span=12, adjust=False).mean()
     df["EMA_long"] = df["close"].ewm(span=26, adjust=False).mean()
@@ -129,19 +138,19 @@ def parabolic_sar_strategy(symbol="BTCUSDT", interval="1h", days=7, step=0.02, m
     df["RSI"] = ta.momentum.RSIIndicator(df["close"]).rsi()
 
     buy_signal = (
-            df["SAR"].iloc[-1] < df["close"].iloc[-1] and
-            df["ADX"].iloc[-1] > 25 and
-            df["EMA_short"].iloc[-1] > df["EMA_long"].iloc[-1] and
-            df["MACD"].iloc[-1] > df["Signal"].iloc[-1] and
-            40 <= df["RSI"].iloc[-1] <= 70
+        df["SAR"].iloc[-1] < df["close"].iloc[-1]
+        and df["ADX"].iloc[-1] > 25
+        and df["EMA_short"].iloc[-1] > df["EMA_long"].iloc[-1]
+        and df["MACD"].iloc[-1] > df["Signal"].iloc[-1]
+        and 40 <= df["RSI"].iloc[-1] <= 70
     )
 
     sell_signal = (
-            df["SAR"].iloc[-1] > df["close"].iloc[-1] and
-            df["ADX"].iloc[-1] > 25 and
-            df["EMA_short"].iloc[-1] < df["EMA_long"].iloc[-1] and
-            df["MACD"].iloc[-1] < df["Signal"].iloc[-1] and
-            df["RSI"].iloc[-1] < 30
+        df["SAR"].iloc[-1] > df["close"].iloc[-1]
+        and df["ADX"].iloc[-1] > 25
+        and df["EMA_short"].iloc[-1] < df["EMA_long"].iloc[-1]
+        and df["MACD"].iloc[-1] < df["Signal"].iloc[-1]
+        and df["RSI"].iloc[-1] < 30
     )
 
     if buy_signal:

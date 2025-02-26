@@ -15,44 +15,60 @@ QUANTITY = 0.01  # Лот для входа в позицию
 # Параметры стратегии
 STOP_LOSS = 0.3  # 0.3% от цены входа
 TAKE_PROFIT = 0.6  # 0.6% от цены входа
-ORDER_FLOW_THRESHOLD = 100  # Минимальный объем крупных рыночных ордеров
+EMA_SHORT = 9  # Короткая EMA
+EMA_LONG = 21  # Длинная EMA
+RSI_PERIOD = 14  # Период RSI
+RSI_OVERBOUGHT = 70  # Перекупленность
+RSI_OVERSOLD = 30  # Перепроданность
 
 # Глобальные переменные
-data = {"bids": [], "asks": [], "trades": []}
+data = []
 position = None
 entry_price = 0
 
 
-# Функция получения данных стакана и ленты принтов через REST API
-def fetch_order_book():
+# Функция получения свечей
+def fetch_candles():
     global data
-    order_book = client.get_order_book(symbol=SYMBOL, limit=10)
-    data["bids"] = [(float(price), float(qty)) for price, qty in order_book["bids"]]
-    data["asks"] = [(float(price), float(qty)) for price, qty in order_book["asks"]]
+    candles = client.get_klines(
+        symbol=SYMBOL, interval=Client.KLINE_INTERVAL_1MINUTE, limit=50
+    )
+    data = [float(candle[4]) for candle in candles]  # Используем цену закрытия
 
 
-def fetch_recent_trades():
-    global data
-    trades = client.get_recent_trades(symbol=SYMBOL, limit=100)
-    data["trades"] = [
-        (float(trade["price"]), float(trade["qty"]), trade["isBuyerMaker"])
-        for trade in trades
-    ]
+# Функция расчета EMA
+def calculate_ema(prices, period):
+    return np.convolve(prices, np.ones((period,)) / period, mode="valid")[-1]
 
 
-# Анализ дисбаланса ордеров
-def analyze_order_flow():
+# Функция расчета RSI
+def calculate_rsi(prices, period=RSI_PERIOD):
+    deltas = np.diff(prices)
+    seed = deltas[:period]
+    up = seed[seed >= 0].sum() / period
+    down = -seed[seed < 0].sum() / period
+    rs = up / down if down != 0 else 0
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+
+# Анализ импульсного движения
+def analyze_momentum():
     global position, entry_price
-    buy_volume = sum(qty for price, qty, side in data["trades"] if not side)
-    sell_volume = sum(qty for price, qty, side in data["trades"] if side)
+    if len(data) < EMA_LONG:
+        return
 
-    if buy_volume > ORDER_FLOW_THRESHOLD and not position:
+    ema_short = calculate_ema(data, EMA_SHORT)
+    ema_long = calculate_ema(data, EMA_LONG)
+    rsi = calculate_rsi(data)
+
+    if ema_short > ema_long and rsi < RSI_OVERSOLD and not position:
         position = "long"
-        entry_price = data["bids"][0][0]
+        entry_price = data[-1]
         place_order("BUY")
-    elif sell_volume > ORDER_FLOW_THRESHOLD and not position:
+    elif ema_short < ema_long and rsi > RSI_OVERBOUGHT and not position:
         position = "short"
-        entry_price = data["asks"][0][0]
+        entry_price = data[-1]
         place_order("SELL")
 
 
@@ -101,12 +117,11 @@ def close_position():
 
 # Основной цикл
 while True:
-    fetch_order_book()
-    fetch_recent_trades()
-    analyze_order_flow()
-    if data["trades"]:
-        manage_position(data["trades"][-1][0])
-    time.sleep(1)
+    fetch_candles()
+    analyze_momentum()
+    if data:
+        manage_position(data[-1])
+    time.sleep(60)
 
 
 # Бэктестинг
@@ -116,12 +131,16 @@ def backtest(data):
     position = None
     entry_price = 0
 
-    for price, qty, side in data["trades"]:
+    for price in data:
+        ema_short = calculate_ema(data, EMA_SHORT)
+        ema_long = calculate_ema(data, EMA_LONG)
+        rsi = calculate_rsi(data)
+
         if position is None:
-            if qty > ORDER_FLOW_THRESHOLD and not side:
+            if ema_short > ema_long and rsi < RSI_OVERSOLD:
                 position = "long"
                 entry_price = price
-            elif qty > ORDER_FLOW_THRESHOLD and side:
+            elif ema_short < ema_long and rsi > RSI_OVERBOUGHT:
                 position = "short"
                 entry_price = price
         else:
@@ -156,4 +175,4 @@ def backtest(data):
 
 
 # Пример запуска бэктеста
-print(backtest(data=data))
+backtest(data)

@@ -24,6 +24,7 @@ def sma_strategy(prices, short_window=10, long_window=50):
     else:
         return "HOLD"
 
+
 def combined_strategy(symbol="BTCUSDT"):
     """
     Анализирует рынок на нескольких таймфреймах и возвращает общий сигнал (BUY, SELL, HOLD).
@@ -42,5 +43,3 @@ def combined_strategy(symbol="BTCUSDT"):
         return "SELL"
     else:
         return "HOLD"
-
-

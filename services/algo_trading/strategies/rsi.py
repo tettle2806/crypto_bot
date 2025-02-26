@@ -1,7 +1,9 @@
 from services.algo_trading.get_prices import get_historical_prices
 
 
-def rsi_strategy(symbol="BTCUSDT", interval="1h", period=14, overbought=70, oversold=30):
+def rsi_strategy(
+    symbol="BTCUSDT", interval="1h", period=14, overbought=70, oversold=30
+):
     """
     Стратегия RSI: анализирует последние данные и возвращает торговый сигнал.
     """
@@ -22,6 +24,3 @@ def rsi_strategy(symbol="BTCUSDT", interval="1h", period=14, overbought=70, over
         return "BUY"
     else:
         return "HOLD"
-
-
-

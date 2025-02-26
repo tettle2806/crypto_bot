@@ -1,4 +1,3 @@
-
 import pandas as pd
 import requests
 from datetime import datetime, timedelta, UTC
@@ -33,4 +32,6 @@ def get_historical_prices(symbol="BTCUSDT", interval="1h", days=7, retries=3, de
             print(f"Ошибка запроса ({attempt + 1}/{retries}): {e}")
             time.sleep(delay)
 
-    raise ConnectionError("Не удалось получить данные с Binance после нескольких попыток.")
+    raise ConnectionError(
+        "Не удалось получить данные с Binance после нескольких попыток."
+    )
