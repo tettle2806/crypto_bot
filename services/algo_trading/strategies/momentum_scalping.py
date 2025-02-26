@@ -7,7 +7,6 @@ from binance.client import Client
 API_KEY = "G2rAy6PTlNv146by6tsRTQJZvjdporAZYQBwnpJai37qmjQ7XnpHcvAuQiRsrLDP"
 API_SECRET = "tlpVGSVnBBV7inGOjpL5BoiqkhBbLVjbQcupWPy7YWg23PL2oJACKmc51KmDgGFp"
 client = Client(API_KEY, API_SECRET)
-
 # Пара для торговли
 SYMBOL = "BTCUSDT"
 QUANTITY = 0.01  # Лот для входа в позицию
@@ -30,15 +29,14 @@ entry_price = 0
 # Функция получения свечей
 def fetch_candles():
     global data
-    candles = client.get_klines(
-        symbol=SYMBOL, interval=Client.KLINE_INTERVAL_1MINUTE, limit=50
-    )
+    candles = client.get_klines(symbol=SYMBOL, interval=Client.KLINE_INTERVAL_1MINUTE, limit=50)
     data = [float(candle[4]) for candle in candles]  # Используем цену закрытия
+    print(data)
 
 
 # Функция расчета EMA
 def calculate_ema(prices, period):
-    return np.convolve(prices, np.ones((period,)) / period, mode="valid")[-1]
+    return np.convolve(prices, np.ones((period,)) / period, mode='valid')[-1]
 
 
 # Функция расчета RSI
@@ -76,24 +74,13 @@ def analyze_momentum():
 def manage_position(current_price):
     global position, entry_price
     if position:
-        stop_loss_price = (
-            entry_price * (1 - STOP_LOSS / 100)
-            if position == "long"
-            else entry_price * (1 + STOP_LOSS / 100)
-        )
-        take_profit_price = (
-            entry_price * (1 + TAKE_PROFIT / 100)
-            if position == "long"
-            else entry_price * (1 - TAKE_PROFIT / 100)
-        )
+        stop_loss_price = entry_price * (1 - STOP_LOSS / 100) if position == "long" else entry_price * (
+                    1 + STOP_LOSS / 100)
+        take_profit_price = entry_price * (1 + TAKE_PROFIT / 100) if position == "long" else entry_price * (
+                    1 - TAKE_PROFIT / 100)
 
-        if (
-            position == "long"
-            and (current_price <= stop_loss_price or current_price >= take_profit_price)
-        ) or (
-            position == "short"
-            and (current_price >= stop_loss_price or current_price <= take_profit_price)
-        ):
+        if (position == "long" and (current_price <= stop_loss_price or current_price >= take_profit_price)) or \
+                (position == "short" and (current_price >= stop_loss_price or current_price <= take_profit_price)):
             close_position()
 
 
@@ -113,6 +100,13 @@ def close_position():
         print(f"Закрытие SHORT позиции по {SYMBOL}")
         # client.order_market(symbol=SYMBOL, side="BUY", quantity=QUANTITY)
     position = None
+
+
+# Функция для тестирования стратегии на исторических данных за последние две недели
+def test_strategy_last_two_weeks():
+    candles = client.get_klines(symbol=SYMBOL, interval=Client.KLINE_INTERVAL_2HOUR, limit=2000)
+    historical_data = [float(candle[4]) for candle in candles]  # Цена закрытия
+    return backtest(historical_data)
 
 
 # Основной цикл
@@ -144,29 +138,14 @@ def backtest(data):
                 position = "short"
                 entry_price = price
         else:
-            stop_loss_price = (
-                entry_price * (1 - STOP_LOSS / 100)
-                if position == "long"
-                else entry_price * (1 + STOP_LOSS / 100)
-            )
-            take_profit_price = (
-                entry_price * (1 + TAKE_PROFIT / 100)
-                if position == "long"
-                else entry_price * (1 - TAKE_PROFIT / 100)
-            )
+            stop_loss_price = entry_price * (1 - STOP_LOSS / 100) if position == "long" else entry_price * (
+                        1 + STOP_LOSS / 100)
+            take_profit_price = entry_price * (1 + TAKE_PROFIT / 100) if position == "long" else entry_price * (
+                        1 - TAKE_PROFIT / 100)
 
-            if (
-                position == "long"
-                and (price <= stop_loss_price or price >= take_profit_price)
-            ) or (
-                position == "short"
-                and (price >= stop_loss_price or price <= take_profit_price)
-            ):
-                profit = (
-                    (take_profit_price - entry_price)
-                    if position == "long"
-                    else (entry_price - take_profit_price)
-                )
+            if (position == "long" and (price <= stop_loss_price or price >= take_profit_price)) or \
+                    (position == "short" and (price >= stop_loss_price or price <= take_profit_price)):
+                profit = (take_profit_price - entry_price) if position == "long" else (entry_price - take_profit_price)
                 balance += profit * QUANTITY
                 position = None
 
@@ -174,5 +153,5 @@ def backtest(data):
     return balance
 
 
-# Пример запуска бэктеста
-backtest(data)
+# Запуск теста стратегии на данных за последние две недели
+test_strategy_last_two_weeks()
