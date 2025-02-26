@@ -1,3 +1,6 @@
+#TODO: Стратегия моментум-скэльпинга на криптовалютной бирже Binance
+#TODO: РАБОЧАЯ СТРАТЕГИЯ
+
 import requests
 import time
 import numpy as np
@@ -120,6 +123,7 @@ while True:
 
 # Бэктестинг
 def backtest(data):
+    print(data)
     capital = 10000  # Начальный капитал
     balance = capital
     position = None
