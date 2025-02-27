@@ -1,0 +1,59 @@
+graph TD
+    Client[Клиент] --> API_Gateway[API Gateway]
+    
+    subgraph "Инфраструктура"
+        API_Gateway --> API_Server
+        Docker[Docker Containers]
+    end
+    
+    subgraph "API_Server (REST API)"
+        API_Server[API Server] --> Auth[Auth Service]
+        API_Server --> Routes[Routing]
+        API_Server --> Validation[Validation]
+        API_Server --> Controllers[Controllers]
+    end
+    
+    subgraph "Основной микросервис"
+        Controllers --> AlgoTrading
+        Controllers --> Events
+        Controllers --> MarketAnalysis
+        
+        subgraph "Services"
+            AlgoTrading[AlgoTrading Service] --> TA[Technical Analysis]
+            AlgoTrading --> Strategies[Trading Strategies]
+            AlgoTrading --> Execution[Order Execution]
+            
+            Events[Events Service] --> Notifications[Notifications]
+            Events --> Alerts[Alerts]
+            Events --> Scheduling[Scheduling]
+            
+            MarketAnalysis[Market Analysis Service] --> DataCollection[Data Collection]
+            MarketAnalysis --> Forecasting[Forecasting]
+            MarketAnalysis --> Reporting[Reporting]
+        end
+    end
+    
+    subgraph "Common (Общие компоненты)"
+        Database[(Database)]
+        Config[Configuration]
+        Logger[Logging]
+        Messaging[Message Queue]
+    end
+    
+    AlgoTrading --> Database
+    Events --> Database
+    MarketAnalysis --> Database
+    
+    AlgoTrading --> Messaging
+    Events --> Messaging
+    MarketAnalysis --> Messaging
+    
+    AlgoTrading --> Logger
+    Events --> Logger
+    MarketAnalysis --> Logger
+    API_Server --> Logger
+    
+    AlgoTrading --> Config
+    Events --> Config
+    MarketAnalysis --> Config
+    API_Server --> Config

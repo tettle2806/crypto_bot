@@ -1,0 +1,206 @@
+classDiagram
+    class User {
+        +id: UUID
+        +username: String
+        +email: String
+        +password_hash: String
+        +created_at: DateTime
+        +last_login: DateTime
+        +is_active: Boolean
+        +role: String
+    }
+    
+    class UserProfile {
+        +id: UUID
+        +user_id: UUID
+        +first_name: String
+        +last_name: String
+        +phone: String
+        +risk_tolerance: String
+        +investment_goal: String
+        +settings: JSON
+    }
+    
+    class ApiKey {
+        +id: UUID
+        +user_id: UUID
+        +exchange_id: UUID
+        +api_key: String
+        +api_secret: String [encrypted]
+        +description: String
+        +permissions: JSON
+        +created_at: DateTime
+        +last_used: DateTime
+        +is_active: Boolean
+    }
+    
+    class Exchange {
+        +id: UUID
+        +name: String
+        +code: String
+        +url: String
+        +api_docs_url: String
+        +is_active: Boolean
+        +supported_features: JSON
+    }
+    
+    class Instrument {
+        +id: UUID
+        +exchange_id: UUID
+        +symbol: String
+        +name: String
+        +type: String
+        +is_active: Boolean
+        +precision: Integer
+        +min_order_size: Decimal
+        +max_order_size: Decimal
+        +trading_fees: JSON
+    }
+    
+    class MarketData {
+        +id: UUID
+        +instrument_id: UUID
+        +timestamp: DateTime
+        +open: Decimal
+        +high: Decimal
+        +low: Decimal
+        +close: Decimal
+        +volume: Decimal
+        +indicators: JSON
+    }
+    
+    class Strategy {
+        +id: UUID
+        +user_id: UUID
+        +name: String
+        +description: String
+        +type: String
+        +parameters: JSON
+        +status: String
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+    
+    class StrategyBacktest {
+        +id: UUID
+        +strategy_id: UUID
+        +start_date: DateTime
+        +end_date: DateTime
+        +initial_balance: Decimal
+        +final_balance: Decimal
+        +roi: Decimal
+        +sharpe_ratio: Decimal
+        +max_drawdown: Decimal
+        +win_rate: Decimal
+        +results: JSON
+        +created_at: DateTime
+    }
+    
+    class Order {
+        +id: UUID
+        +user_id: UUID
+        +strategy_id: UUID [nullable]
+        +instrument_id: UUID
+        +exchange_order_id: String
+        +type: String
+        +side: String
+        +price: Decimal
+        +quantity: Decimal
+        +status: String
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+    
+    class Trade {
+        +id: UUID
+        +order_id: UUID
+        +instrument_id: UUID
+        +price: Decimal
+        +quantity: Decimal
+        +fee: Decimal
+        +fee_currency: String
+        +side: String
+        +timestamp: DateTime
+    }
+    
+    class Position {
+        +id: UUID
+        +user_id: UUID
+        +instrument_id: UUID
+        +strategy_id: UUID [nullable]
+        +quantity: Decimal
+        +entry_price: Decimal
+        +current_price: Decimal
+        +unrealized_pnl: Decimal
+        +realized_pnl: Decimal
+        +status: String
+        +opened_at: DateTime
+        +closed_at: DateTime [nullable]
+    }
+    
+    class Alert {
+        +id: UUID
+        +user_id: UUID
+        +instrument_id: UUID
+        +type: String
+        +conditions: JSON
+        +message: String
+        +is_active: Boolean
+        +created_at: DateTime
+        +triggered_at: DateTime [nullable]
+    }
+    
+    class Notification {
+        +id: UUID
+        +user_id: UUID
+        +type: String
+        +title: String
+        +message: String
+        +is_read: Boolean
+        +created_at: DateTime
+    }
+    
+    class AnalysisReport {
+        +id: UUID
+        +user_id: UUID
+        +title: String
+        +type: String
+        +content: JSON
+        +created_at: DateTime
+    }
+    
+    class ScheduledTask {
+        +id: UUID
+        +name: String
+        +service: String
+        +task_type: String
+        +parameters: JSON
+        +schedule: String
+        +last_run: DateTime
+        +next_run: DateTime
+        +status: String
+    }
+    
+    User "1" -- "1" UserProfile
+    User "1" -- "*" ApiKey
+    User "1" -- "*" Strategy
+    User "1" -- "*" Order
+    User "1" -- "*" Position
+    User "1" -- "*" Alert
+    User "1" -- "*" Notification
+    User "1" -- "*" AnalysisReport
+    
+    Exchange "1" -- "*" Instrument
+    Exchange "1" -- "*" ApiKey
+    
+    Instrument "1" -- "*" MarketData
+    Instrument "1" -- "*" Order
+    Instrument "1" -- "*" Trade
+    Instrument "1" -- "*" Position
+    Instrument "1" -- "*" Alert
+    
+    Strategy "1" -- "*" StrategyBacktest
+    Strategy "1" -- "*" Order
+    Strategy "1" -- "*" Position
+    
+    Order "1" -- "*" Trade
