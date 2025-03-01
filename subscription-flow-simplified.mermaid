@@ -1,0 +1,61 @@
+flowchart TD
+    %% Основные этапы
+    Start([Пользователь регистрируется])
+    AddKeys[Пользователь добавляет API ключи биржи]
+    ViewStrategies[Просмотр каталога стратегий]
+    BuySubscription[Покупка подписки на стратегию]
+    ConfigureParams[Настройка параметров риска и объемов]
+    ActivateStrategy[Активация торговой стратегии]
+    
+    %% Торговый процесс
+    subgraph trading[Автоматическая торговля]
+        GetMarketData[Получение данных рынка]
+        AnalyzeData[Анализ данных по алгоритму стратегии]
+        DecisionMaking{Условия для сделки?}
+        PlaceOrder[Размещение ордера на бирже]
+        Notify[Уведомление пользователя]
+    end
+    
+    %% Мониторинг и управление
+    MonitorResults[Мониторинг результатов]
+    
+    subgraph subscription[Управление подпиской]
+        RenewCancel{Продлить или отменить?}
+        Renew[Продление подписки]
+        Cancel[Отмена подписки]
+        StopTrading[Остановка торговли]
+    end
+    
+    %% Связи между этапами
+    Start --> AddKeys
+    AddKeys --> ViewStrategies
+    ViewStrategies --> BuySubscription
+    BuySubscription --> ConfigureParams
+    ConfigureParams --> ActivateStrategy
+    ActivateStrategy --> trading
+    
+    GetMarketData --> AnalyzeData
+    AnalyzeData --> DecisionMaking
+    DecisionMaking -->|Да| PlaceOrder
+    DecisionMaking -->|Нет| GetMarketData
+    PlaceOrder --> Notify
+    Notify --> GetMarketData
+    
+    trading --> MonitorResults
+    MonitorResults --> subscription
+    
+    RenewCancel -->|Продлить| Renew
+    RenewCancel -->|Отменить| Cancel
+    Cancel --> StopTrading
+    Renew --> trading
+    
+    %% Стилизация
+    classDef userAction fill:#f9d5e5,stroke:#333,stroke-width:1px;
+    classDef systemProcess fill:#eeeeee,stroke:#333,stroke-width:1px;
+    classDef decision fill:#b5ead7,stroke:#333,stroke-width:1px;
+    classDef subgraphStyle fill:#f5f5f5,stroke:#333,stroke-width:1px;
+    
+    class Start,AddKeys,ViewStrategies,BuySubscription,ConfigureParams,ActivateStrategy,MonitorResults userAction
+    class GetMarketData,AnalyzeData,PlaceOrder,Notify,StopTrading systemProcess
+    class DecisionMaking,RenewCancel decision
+    class trading,subscription subgraphStyle

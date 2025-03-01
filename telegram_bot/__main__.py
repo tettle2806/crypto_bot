@@ -5,6 +5,7 @@ import sys
 from telegram_bot.config.config import dp, bot, ColoredFormatter
 from telegram_bot.handlers.start import router as start_router
 
+
 async def main() -> None:
     dp.include_router(start_router)
 

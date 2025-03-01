@@ -22,7 +22,6 @@ class DbSettings(BaseSettings):
 
 class Setting(BaseSettings):
 
-
     db_url: str = DB_URL
     db_echo: bool = False
     # db_echo: bool = True
