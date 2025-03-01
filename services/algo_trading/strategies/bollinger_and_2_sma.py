@@ -1,7 +1,5 @@
 import pandas as pd
-import numpy as np
 from backtesting import Backtest, Strategy
-from backtesting.lib import crossover
 
 
 class BollingerTrendStrategy(Strategy):

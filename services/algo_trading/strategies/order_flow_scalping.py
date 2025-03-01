@@ -1,8 +1,6 @@
-import requests
 import time
-import numpy as np
 from binance.client import Client
-
+from services.algo_trading.backtesting import backtest
 # API-ключи Binance (замени на свои)
 API_KEY = "G2rAy6PTlNv146by6tsRTQJZvjdporAZYQBwnpJai37qmjQ7XnpHcvAuQiRsrLDP"
 API_SECRET = "tlpVGSVnBBV7inGOjpL5BoiqkhBbLVjbQcupWPy7YWg23PL2oJACKmc51KmDgGFp"
@@ -108,52 +106,3 @@ while True:
         manage_position(data["trades"][-1][0])
     time.sleep(1)
 
-
-# Бэктестинг
-def backtest(data):
-    capital = 10000  # Начальный капитал
-    balance = capital
-    position = None
-    entry_price = 0
-
-    for price, qty, side in data["trades"]:
-        if position is None:
-            if qty > ORDER_FLOW_THRESHOLD and not side:
-                position = "long"
-                entry_price = price
-            elif qty > ORDER_FLOW_THRESHOLD and side:
-                position = "short"
-                entry_price = price
-        else:
-            stop_loss_price = (
-                entry_price * (1 - STOP_LOSS / 100)
-                if position == "long"
-                else entry_price * (1 + STOP_LOSS / 100)
-            )
-            take_profit_price = (
-                entry_price * (1 + TAKE_PROFIT / 100)
-                if position == "long"
-                else entry_price * (1 - TAKE_PROFIT / 100)
-            )
-
-            if (
-                position == "long"
-                and (price <= stop_loss_price or price >= take_profit_price)
-            ) or (
-                position == "short"
-                and (price >= stop_loss_price or price <= take_profit_price)
-            ):
-                profit = (
-                    (take_profit_price - entry_price)
-                    if position == "long"
-                    else (entry_price - take_profit_price)
-                )
-                balance += profit * QUANTITY
-                position = None
-
-    print(f"Конечный баланс: {balance}")
-    return balance
-
-
-# Пример запуска бэктеста
-print(backtest(data=data))

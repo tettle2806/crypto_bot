@@ -3,6 +3,8 @@ import pandas as pd
 from services.algo_trading.get_prices import get_historical_prices
 from services.algo_trading.strategies.bolinger_bands_breakpoints import data
 from services.algo_trading.strategies.bollinger_bands import bollinger_bands_strategy
+from services.algo_trading.strategies.momentum_scalping import calculate_ema, EMA_SHORT, EMA_LONG, calculate_rsi, \
+    RSI_OVERSOLD, RSI_OVERBOUGHT, STOP_LOSS, TAKE_PROFIT, QUANTITY
 
 
 def backtest_strategy(
@@ -101,4 +103,52 @@ def backtest_bollinger(prices, initial_balance=1000, trading_size=0.1):
 
 
 # Пример данных
-print(backtest_bollinger(get_historical_prices()))
+
+def backtest(data):
+    print(data)
+    capital = 10000  # Начальный капитал
+    balance = capital
+    position = None
+    entry_price = 0
+
+    for price in data:
+        ema_short = calculate_ema(data, EMA_SHORT)
+        ema_long = calculate_ema(data, EMA_LONG)
+        rsi = calculate_rsi(data)
+
+        if position is None:
+            if ema_short > ema_long and rsi < RSI_OVERSOLD:
+                position = "long"
+                entry_price = price
+            elif ema_short < ema_long and rsi > RSI_OVERBOUGHT:
+                position = "short"
+                entry_price = price
+        else:
+            stop_loss_price = (
+                entry_price * (1 - STOP_LOSS / 100)
+                if position == "long"
+                else entry_price * (1 + STOP_LOSS / 100)
+            )
+            take_profit_price = (
+                entry_price * (1 + TAKE_PROFIT / 100)
+                if position == "long"
+                else entry_price * (1 - TAKE_PROFIT / 100)
+            )
+
+            if (
+                position == "long"
+                and (price <= stop_loss_price or price >= take_profit_price)
+            ) or (
+                position == "short"
+                and (price >= stop_loss_price or price <= take_profit_price)
+            ):
+                profit = (
+                    (take_profit_price - entry_price)
+                    if position == "long"
+                    else (entry_price - take_profit_price)
+                )
+                balance += profit * QUANTITY
+                position = None
+
+    print(f"Конечный баланс: {balance}")
+    return balance
